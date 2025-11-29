@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import CoinCard from './components/CoinCard'
-import FilterInput from './components/FilterInput'
-import LimitSelector from './components/LimitSelector'
-import SortSelector from './components/SortSelector'
+import {Routes,Route} from 'react-router'
+import HomePage from './pages/home'
+import AboutPage from './pages/about'
+import Header from './components/Header'
+import NotFoundPage from './pages/not-found'
+import CoinDetailsPage from './pages/coin-details'
 
 
 const API_URL = import.meta.env.VITE_API_URL
@@ -15,41 +17,6 @@ const App = () => {
   const [limit,setLimit] = useState(10)
   const [filter,setFilter] = useState("")
   const [sortBy,setSortBy] = useState("market_cap_desc")
-
-
-
-  const filteredCoins = coins.filter((coin) => {
-    const name = coin?.name?.toLowerCase() || '';
-    const symbol = coin?.symbol?.toLowerCase() || '';
-    const search = filter?.toLowerCase() || '';
-
-    return name.includes(search) || symbol.includes(search)
-  })
-  .slice()
-  .sort((a, b) => {
-    switch (sortBy) {
-      case "market_cap_desc":
-        return (b.market_cap || 0) - (a.market_cap || 0);
-      case "market_cap_asc":
-        return (a.market_cap || 0) - (b.market_cap || 0);
-      case "price_desc":
-        return (b.current_price || 0) - (a.current_price || 0);
-      case "price_asc":
-        return (a.current_price || 0) - (b.current_price || 0);
-      case "change_desc":
-        return (
-          (b.price_change_percentage_24h || 0) -
-          (a.price_change_percentage_24h || 0)
-        );
-      case "change_asc":
-        return (
-          (a.price_change_percentage_24h || 0) -
-          (b.price_change_percentage_24h || 0)
-        );
-      default:
-        return 0;
-    }
-  });
 
 
   const fetchCoins = async() => {
@@ -76,36 +43,31 @@ const App = () => {
   },[limit])
 
 
-
-
   return (
-   <div>
-    <h1>Crypto Pulse</h1>
+    <>
+     <Header/>
 
-    {loading && <div>Loading...</div>}
+      <Routes>
+       <Route 
+        path='/' 
+        element={<HomePage  
+              coins={coins}
+              filter={filter}
+              setFilter={setFilter}
+              limit={limit}
+              setLimit={setLimit}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              loading={loading}
+              error={error}/>} />
 
-    {error && <div className='error'>{error}</div>}
+        <Route path='/about' element={<AboutPage/>}/> 
+        <Route path='/coin/:id' element={<CoinDetailsPage />} />
 
-    <div className='top-controls'>
-      <FilterInput   filter={filter} onFilterChange={setFilter}/>
-      <LimitSelector limit={limit} onLimitChange={setLimit}/>
-      <SortSelector sortBy={sortBy} onSortChange={setSortBy} />
-    </div>
+        <Route path='*' element={<NotFoundPage/>}/> 
 
-    {
-      !loading  && !error &&  (
-        <main className='grid'>
-           {
-            filteredCoins?.map((coin) => (
-              <CoinCard coin={coin} key={coin.id} />
-            ))
-           }
-        </main>
-      )
-    }
-
-
-   </div>
+     </Routes>  
+    </>
   )
 }
 
